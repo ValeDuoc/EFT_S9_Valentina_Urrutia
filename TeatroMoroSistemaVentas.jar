@@ -1,0 +1,157 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
+ */
+package nota.pkgfinal;
+
+/**
+ *
+ * @author vurru
+ */
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
+
+
+// Clase principal del sistema de ventas
+public class TeatroMoroSistemaVentas {
+    public static void main(String[] args) {
+        // Crear un evento de ejemplo
+        Evento evento = new Evento("Concierto", "2024-05-10", "20:00", 100);
+
+        // Crear el sistema de ventas y comenzar la venta de tickets
+        VentaTickets ventaTickets = new VentaTickets(evento);
+        ventaTickets.iniciarVenta();
+    }
+}
+
+// Clase para representar un evento
+class Evento {
+    private String tipo;
+    private String fecha;
+    private String hora;
+    private SeatingPlan seatingPlan;
+
+    public Evento(String tipo, String fecha, String hora, int totalAsientos) {
+        this.tipo = tipo;
+        this.fecha = fecha;
+        this.hora = hora;
+        this.seatingPlan = new SeatingPlan(20000, 15000, 10000, totalAsientos); // Precios por defecto
+    }
+
+    public SeatingPlan getSeatingPlan() {
+        return seatingPlan;
+    }
+}
+
+// Clase para gestionar el diseño y disponibilidad de asientos
+class SeatingPlan {
+    private double precioVIP;
+    private double precioPlateaAlta;
+    private double precioPlateaBaja;
+    private int cantidadAsientosDisponibles;
+
+    public SeatingPlan(double precioVIP, double precioPlateaAlta, double precioPlateaBaja, int totalAsientos) {
+        this.precioVIP = precioVIP;
+        this.precioPlateaAlta = precioPlateaAlta;
+        this.precioPlateaBaja = precioPlateaBaja;
+        this.cantidadAsientosDisponibles = totalAsientos;
+    }
+
+    public double getPrecioAsiento(String tipoAsiento) {
+        switch (tipoAsiento) {
+            case "VIP":
+                return precioVIP;
+            case "Platea Alta":
+                return precioPlateaAlta;
+            case "Platea Baja":
+                return precioPlateaBaja;
+            default:
+                return 0.0;
+        }
+    }
+
+    public int getCantidadAsientosDisponibles() {
+        return cantidadAsientosDisponibles;
+    }
+
+    public synchronized boolean seleccionarAsiento(String tipoAsiento) {
+        if (cantidadAsientosDisponibles > 0) {
+            cantidadAsientosDisponibles--;
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
+// Clase para gestionar la venta de tickets
+class VentaTickets {
+    private Evento evento;
+
+    public VentaTickets(Evento evento) {
+        this.evento = evento;
+    }
+
+    public void iniciarVenta() {
+        SeatingPlan seatingPlan = evento.getSeatingPlan();
+        Scanner scanner = new Scanner(System.in);
+
+        // Mostrar cantidad de asientos disponibles
+        System.out.println("Cantidad de asientos disponibles: " + seatingPlan.getCantidadAsientosDisponibles());
+
+        // Mostrar tipos de asientos y precios
+        System.out.println("Tipos de Asientos:");
+        System.out.println("1. VIP - Precio: $" + seatingPlan.getPrecioAsiento("VIP"));
+        System.out.println("2. Platea Alta - Precio: $" + seatingPlan.getPrecioAsiento("Platea Alta"));
+        System.out.println("3. Platea Baja - Precio: $" + seatingPlan.getPrecioAsiento("Platea Baja"));
+
+        // Solicitar al usuario que seleccione el tipo de asiento
+        System.out.print("Seleccione el tipo de asiento (1, 2 o 3): ");
+        int opcion = scanner.nextInt();
+        String tipoAsiento;
+        switch (opcion) {
+            case 1:
+                tipoAsiento = "VIP";
+                break;
+            case 2:
+                tipoAsiento = "Platea Alta";
+                break;
+            case 3:
+                tipoAsiento = "Platea Baja";
+                break;
+            default:
+                System.out.println("Opción no válida.");
+                return;
+        }
+
+        // Verificar disponibilidad de asientos
+        if (!seatingPlan.seleccionarAsiento(tipoAsiento)) {
+            System.out.println("Lo sentimos, no quedan asientos disponibles.");
+            return;
+        }
+
+        // Calcular el precio base del asiento seleccionado
+        double precioBase = seatingPlan.getPrecioAsiento(tipoAsiento);
+
+        // Aplicar descuentos para adultos mayores y estudiantes
+        System.out.print("¿Cuál es su edad?: ");
+        int edad = scanner.nextInt();
+        boolean esAdultoMayor = edad >= 60;
+
+        System.out.print("¿Es estudiante? (Sí/No): ");
+        String respuesta = scanner.next();
+        boolean esEstudiante = respuesta.equalsIgnoreCase("Sí");
+
+        double precioTotal = precioBase;
+        if (esAdultoMayor || esEstudiante) {
+            precioTotal *= 0.9; // Aplicar
+        }
+
+        // Mostrar el precio total
+        System.out.println("Precio total: $" + precioTotal);
+    }
+}
